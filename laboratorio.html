@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laboratório de Informática – Tupanatinga</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; scroll-padding-top: 72px; }
+    body { font-family: 'DM Sans', sans-serif; background: #050d1f; color: #e8edf5; overflow-x: hidden; }
+
+    :root {
+      --navy-deep:  #050d1f;
+      --navy-mid:   #0b1a38;
+      --navy-light: #112248;
+      --navy-card:  #0e1d3d;
+      --orange:     #ff6b00;
+      --orange-lt:  #ff8c2a;
+      --orange-glow:rgba(255,107,0,.35);
+      --blue-accent:#1e90ff;
+      --text-main:  #e8edf5;
+      --text-muted: #7f98c2;
+      --glass-bg:   rgba(14,29,61,.65);
+      --glass-border:rgba(255,255,255,.07);
+      --radius-lg:  18px;
+      --radius-md:  12px;
+      --transition: .35s cubic-bezier(.4,0,.2,1);
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--navy-deep); }
+    ::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 3px; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5%; height: 90px;
+      background: rgba(5,13,31,.85);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--glass-border);
+      transition: var(--transition);
+    }
+    nav.scrolled { background: rgba(5,13,31,.97); box-shadow: 0 4px 40px rgba(0,0,0,.5); }
+
+    .nav-logo { display: flex; align-items: center; text-decoration: none; }
+    .nav-logo img { height: 120px; width: auto; object-fit: contain; filter: none; }
+
+    .nav-links { display: flex; gap: 4px; list-style: none; }
+    .nav-links a {
+      color: var(--text-muted); text-decoration: none; font-size: .88rem; font-weight: 500;
+      padding: 8px 14px; border-radius: 8px; transition: var(--transition); position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+      width: 0; height: 2px; background: var(--orange); border-radius: 2px; transition: var(--transition);
+    }
+    .nav-links a:hover { color: var(--text-main); }
+    .nav-links a:hover::after { width: 60%; }
+
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 6px; border-radius: 8px; border: none; background: none; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--text-main); border-radius: 2px; transition: var(--transition); }
+    .mobile-menu { display: none; position: fixed; top: 72px; left: 0; right: 0; background: rgba(5,13,31,.97); backdrop-filter: blur(20px); padding: 20px; border-bottom: 1px solid var(--glass-border); z-index: 999; }
+    .mobile-menu.open { display: block; }
+    .mobile-menu a { display: block; color: var(--text-muted); text-decoration: none; font-size: 1rem; padding: 14px 16px; border-radius: 10px; transition: var(--transition); }
+    .mobile-menu a:hover { color: var(--orange); background: var(--navy-light); }
+
+    /* ── SHARED ── */
+    section { padding: 100px 5%; scroll-margin-top: 72px; }
+    .section-tag { display: inline-flex; align-items: center; gap: 8px; font-size: .78rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--orange); background: rgba(255,107,0,.1); border: 1px solid rgba(255,107,0,.25); padding: 6px 14px; border-radius: 50px; margin-bottom: 18px; }
+    .section-title { font-family: 'Exo 2', sans-serif; font-weight: 800; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.15; color: var(--text-main); margin-bottom: 16px; }
+    .section-title span { color: var(--orange); }
+    .section-subtitle { font-size: 1.05rem; color: var(--text-muted); line-height: 1.75; max-width: 660px; }
+    .section-header { text-align: center; margin-bottom: 60px; }
+    .section-header .section-subtitle { margin: 0 auto; }
+
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: .1s; }
+    .reveal-delay-2 { transition-delay: .2s; }
+    .reveal-delay-3 { transition-delay: .3s; }
+    .reveal-delay-4 { transition-delay: .4s; }
+    .reveal-delay-5 { transition-delay: .5s; }
+
+    /* ── HERO ── */
+    #hero { min-height: 100vh; padding: 0 5%; display: flex; align-items: center; position: relative; overflow: hidden; }
+    #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+    .hero-grid-overlay { position: absolute; inset: 0; z-index: 1; background-image: linear-gradient(rgba(255,107,0,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,107,0,.04) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent); }
+    .hero-glow { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); width: 700px; height: 400px; background: radial-gradient(ellipse, rgba(255,107,0,.12) 0%, transparent 70%); z-index: 1; pointer-events: none; }
+    .hero-content { position: relative; z-index: 2; max-width: 820px; }
+
+    .hero-top-badges { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,107,0,.12); border: 1px solid rgba(255,107,0,.3); padding: 7px 16px; border-radius: 50px; font-size: .8rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--orange-lt); animation: badgePulse 3s ease-in-out infinite; }
+    @keyframes badgePulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,107,0,0)} 50%{box-shadow:0 0 0 6px rgba(255,107,0,.1)} }
+    .hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); animation: blink 1.5s step-end infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+    .hero-free-pill { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, rgba(34,197,94,.18), rgba(22,163,74,.08)); border: 1px solid rgba(34,197,94,.35); padding: 7px 18px; border-radius: 50px; font-size: .82rem; font-weight: 700; color: #4ade80; letter-spacing: .08em; text-transform: uppercase; animation: badgePulse 3s ease-in-out infinite .5s; }
+    .hero-free-pill i { font-size: .95rem; }
+
+    .hero-title { font-family: 'Exo 2', sans-serif; font-size: clamp(2.6rem, 6.5vw, 5.2rem); font-weight: 900; line-height: 1.08; letter-spacing: -.02em; margin-bottom: 24px; animation: heroFadeIn .9s ease both; }
+    @keyframes heroFadeIn { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    .hero-title .line1 { display: block; color: var(--text-main); }
+    .hero-title .line2 { display: block; background: linear-gradient(90deg, var(--orange), #ff3d00, var(--orange-lt)); background-size: 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: shimmer 4s linear infinite; }
+    @keyframes shimmer { 0%{background-position:0%} 100%{background-position:200%} }
+
+    .hero-desc { font-size: 1.1rem; color: var(--text-muted); line-height: 1.8; max-width: 540px; margin-bottom: 40px; animation: heroFadeIn .9s .2s ease both; }
+    .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; animation: heroFadeIn .9s .35s ease both; }
+
+    .btn-primary { display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, var(--orange), #e55a00); color: #fff; font-weight: 600; font-size: .95rem; padding: 14px 32px; border-radius: 12px; text-decoration: none; border: none; cursor: pointer; box-shadow: 0 8px 30px rgba(255,107,0,.4); transition: var(--transition); position: relative; overflow: hidden; }
+    .btn-primary::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.15), transparent); opacity: 0; transition: var(--transition); }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 14px 40px rgba(255,107,0,.55); }
+    .btn-primary:hover::before { opacity: 1; }
+    .btn-secondary { display: inline-flex; align-items: center; gap: 10px; background: transparent; color: var(--text-muted); font-weight: 600; font-size: .95rem; padding: 14px 28px; border-radius: 12px; text-decoration: none; border: 1px solid rgba(255,255,255,.12); transition: var(--transition); }
+    .btn-secondary:hover { color: var(--text-main); border-color: rgba(255,107,0,.4); background: rgba(255,107,0,.06); }
+
+    .hero-stats { display: flex; gap: 40px; flex-wrap: wrap; margin-top: 60px; padding-top: 36px; border-top: 1px solid var(--glass-border); animation: heroFadeIn .9s .5s ease both; }
+    .hero-stat span:first-child { display: block; font-family: 'Exo 2', sans-serif; font-weight: 900; font-size: 2.2rem; color: var(--orange); }
+    .hero-stat span:last-child { font-size: .82rem; color: var(--text-muted); letter-spacing: .05em; }
+
+    /* ── CURSOS ── */
+    #cursos { background: var(--navy-mid); position: relative; overflow: hidden; }
+    #cursos::before { content: ''; position: absolute; top: -200px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(255,107,0,.07), transparent 70%); pointer-events: none; }
+    .cursos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; }
+
+    .curso-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 40px 32px; cursor: pointer; position: relative; overflow: hidden; transition: var(--transition); backdrop-filter: blur(12px); }
+    .curso-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--orange), transparent); opacity: 0; transition: var(--transition); }
+    .curso-card::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(255,107,0,.08), transparent 70%); opacity: 0; transition: var(--transition); }
+    .curso-card:hover { transform: translateY(-8px); border-color: rgba(255,107,0,.3); box-shadow: 0 20px 60px rgba(0,0,0,.4), 0 0 0 1px rgba(255,107,0,.15); }
+    .curso-card:hover::before, .curso-card:hover::after { opacity: 1; }
+    .curso-card.active { border-color: rgba(255,107,0,.5); background: rgba(255,107,0,.07); box-shadow: 0 0 40px rgba(255,107,0,.15); }
+    .curso-card.active::before { opacity: 1; }
+
+    .curso-icon { width: 60px; height: 60px; border-radius: 14px; background: linear-gradient(135deg, rgba(255,107,0,.2), rgba(255,107,0,.05)); border: 1px solid rgba(255,107,0,.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--orange); margin-bottom: 24px; transition: var(--transition); }
+    .curso-card:hover .curso-icon { background: linear-gradient(135deg, rgba(255,107,0,.35), rgba(255,107,0,.1)); box-shadow: 0 0 24px rgba(255,107,0,.3); }
+    .curso-label { font-size: .72rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--orange); margin-bottom: 8px; }
+    .curso-title { font-family: 'Exo 2', sans-serif; font-weight: 800; font-size: 1.7rem; color: var(--text-main); margin-bottom: 14px; }
+    .curso-desc { font-size: .9rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 28px; }
+    .curso-topics { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 32px; }
+    .curso-topics li { display: flex; align-items: center; gap: 10px; font-size: .87rem; color: var(--text-muted); }
+    .curso-topics li i { color: var(--orange); font-size: .7rem; }
+    .curso-pill { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,107,0,.12); border: 1px solid rgba(255,107,0,.2); color: var(--orange-lt); font-size: .8rem; font-weight: 600; padding: 8px 18px; border-radius: 50px; transition: var(--transition); }
+    .curso-card:hover .curso-pill { background: rgba(255,107,0,.22); transform: translateX(4px); }
+    .curso-duration { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; color: #4ade80; font-weight: 600; margin-bottom: 16px; }
+    .curso-duration i { font-size: .8rem; }
+
+    /* ── ARQUIVOS ── */
+    #arquivos { background: var(--navy-deep); }
+    .period-tabs { display: flex; gap: 8px; background: rgba(255,255,255,.04); padding: 6px; border-radius: 14px; margin-bottom: 36px; border: 1px solid var(--glass-border); width: fit-content; margin-left: auto; margin-right: auto; flex-wrap: wrap; justify-content: center; }
+    .period-tab { padding: 10px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: .88rem; color: var(--text-muted); transition: var(--transition); border: none; background: none; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .period-tab.active { background: linear-gradient(135deg, var(--orange), #e55a00); color: #fff; box-shadow: 0 4px 20px rgba(255,107,0,.4); }
+    .period-tab:not(.active):hover { color: var(--text-main); background: rgba(255,255,255,.06); }
+    .tab-panel { display: none; animation: panelIn .4s ease; }
+    .tab-panel.active { display: block; }
+    @keyframes panelIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+    .files-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+    .file-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 22px 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: var(--transition); backdrop-filter: blur(10px); }
+    .file-card:hover { border-color: rgba(255,107,0,.3); transform: translateX(4px); box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+    .file-icon { width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .file-icon.pdf { background: rgba(220,38,38,.15); color: #f87171; }
+    .file-icon.doc { background: rgba(37,99,235,.15); color: #60a5fa; }
+    .file-icon.ppt { background: rgba(234,88,12,.15); color: #fb923c; }
+    .file-icon.zip { background: rgba(139,92,246,.15); color: #a78bfa; }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name { font-weight: 600; font-size: .9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+    .file-meta { font-size: .78rem; color: var(--text-muted); }
+    .file-dl { color: var(--text-muted); transition: var(--transition); font-size: .95rem; }
+    .file-card:hover .file-dl { color: var(--orange); }
+
+    /* ── EQUIPE ── */
+    #equipe { background: var(--navy-mid); position: relative; }
+    .team-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 22px; }
+    .team-card {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); padding: 28px 20px;
+      text-align: center; transition: var(--transition); backdrop-filter: blur(12px);
+      position: relative; overflow: hidden; width: 190px; flex-shrink: 0;
+    }
+    .team-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--orange), transparent); opacity: 0; transition: var(--transition); }
+    .team-card:hover { transform: translateY(-6px); border-color: rgba(255,107,0,.28); box-shadow: 0 16px 40px rgba(0,0,0,.35); }
+    .team-card:hover::before { opacity: 1; }
+    .team-card.coord { border-color: rgba(255,107,0,.3); width: 230px; }
+    .team-card.coord::before { opacity: .6; }
+
+    /* Avatar foto-ready — 100×100 círculo, object-fit cover, ícone como fallback */
+    .team-avatar {
+      width: 100px; height: 100px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--navy-light), var(--navy-card));
+      border: 2.5px solid rgba(255,107,0,.3);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; font-size: 2rem; color: var(--orange);
+      transition: var(--transition); overflow: hidden; position: relative;
+    }
+    /* A foto fica sobre o ícone — se carregar, cobre; se falhar, o ícone aparece */
+    .team-avatar img.team-photo {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center top;
+      border-radius: 50%;
+    }
+    .team-card:hover .team-avatar { border-color: var(--orange); box-shadow: 0 0 22px rgba(255,107,0,.35); }
+    .team-card.coord .team-avatar { width: 110px; height: 110px; border-color: var(--orange); box-shadow: 0 0 26px rgba(255,107,0,.3); }
+
+    .team-name { font-family: 'Exo 2', sans-serif; font-weight: 700; font-size: .95rem; color: var(--text-main); margin-bottom: 3px; }
+    .team-role { font-size: .78rem; color: var(--orange-lt); font-weight: 600; letter-spacing: .03em; margin-bottom: 3px; }
+    .team-role-sub { font-size: .72rem; color: var(--text-muted); margin-bottom: 11px; }
+    .team-period-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,107,0,.1); border: 1px solid rgba(255,107,0,.2); padding: 3px 10px; border-radius: 50px; font-size: .7rem; color: var(--text-muted); }
+    .team-social { display: flex; justify-content: center; margin-top: 14px; }
+    .team-social a { width: 34px; height: 34px; border-radius: 9px; background: rgba(193,53,132,.15); border: 1px solid rgba(193,53,132,.25); display: flex; align-items: center; justify-content: center; color: #e1306c; font-size: .85rem; text-decoration: none; transition: var(--transition); }
+    .team-social a:hover { background: rgba(193,53,132,.3); box-shadow: 0 0 14px rgba(225,48,108,.3); transform: scale(1.1); }
+    .coord-badge { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, rgba(255,107,0,.2), rgba(255,107,0,.06)); border: 1px solid rgba(255,107,0,.35); padding: 4px 14px; border-radius: 50px; font-size: .76rem; color: var(--orange); font-weight: 700; }
+
+    /* ── HERO 2-COL + TECH PANEL ── */
+    .hero-layout { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 48px; width: 100%; }
+    .hero-content { flex: 1; max-width: 620px; }
+    .hero-right { flex-shrink: 0; width: 320px; display: flex; flex-direction: column; gap: 14px; animation: heroFadeIn 1s .45s ease both; }
+    @media (max-width: 1060px) { .hero-right { display: none; } .hero-content { max-width: 820px; } }
+    .tech-panel {
+      background: rgba(11,26,56,.8); border: 1px solid rgba(255,107,0,.22);
+      border-radius: 18px; padding: 22px 20px; backdrop-filter: blur(18px);
+      position: relative; overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .tech-panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--orange) 40%, var(--orange-lt) 60%, transparent); }
+    .tech-panel-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,.05); }
+    .tp-dots { display: flex; gap: 5px; }
+    .tp-dots span { width: 9px; height: 9px; border-radius: 50%; }
+    .tp-dots span:nth-child(1) { background: #ff5f57; }
+    .tp-dots span:nth-child(2) { background: #febc2e; }
+    .tp-dots span:nth-child(3) { background: #28c840; }
+    .tp-label { font-family: 'Exo 2', sans-serif; font-size: .72rem; color: var(--text-muted); letter-spacing: .12em; text-transform: uppercase; }
+    .tp-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+    .tp-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .tp-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: .9rem; flex-shrink: 0; }
+    .tp-icon.orange { background: rgba(255,107,0,.14); border: 1px solid rgba(255,107,0,.22); color: var(--orange); }
+    .tp-icon.green  { background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.25); color: #4ade80; }
+    .tp-icon.blue   { background: rgba(30,144,255,.12); border: 1px solid rgba(30,144,255,.25); color: var(--blue-accent); }
+    .tp-info strong { display: block; font-family: 'Exo 2', sans-serif; font-weight: 900; font-size: 1.3rem; color: var(--text-main); line-height: 1.1; }
+    .tp-info span   { font-size: .72rem; color: var(--text-muted); }
+    .tp-tags { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.05); }
+    .tp-tag { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); padding: 5px 10px; border-radius: 7px; font-size: .7rem; color: var(--text-muted); }
+    .tp-tag i { color: var(--orange); font-size: .65rem; }
+    .mini-panel {
+      background: rgba(11,26,56,.8); border: 1px solid rgba(34,197,94,.25);
+      border-radius: 14px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 8px 28px rgba(0,0,0,.35);
+      animation: floatY 4s ease-in-out infinite;
+    }
+    @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    .mini-panel-icon { width: 36px; height: 36px; border-radius: 9px; background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3); display: flex; align-items: center; justify-content: center; color: #4ade80; font-size: .85rem; flex-shrink: 0; }
+    .mini-panel strong { display: block; font-family: 'Exo 2', sans-serif; font-weight: 800; font-size: .92rem; color: var(--text-main); }
+    .mini-panel span { font-size: .7rem; color: var(--text-muted); }
+
+    /* ── MATRÍCULA ── */
+    #matricula { background: var(--navy-deep); }
+    .matricula-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
+    .matricula-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 36px 32px; backdrop-filter: blur(12px); transition: var(--transition); position: relative; overflow: hidden; }
+    .matricula-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--orange), var(--orange-lt), transparent); }
+    .matricula-card:hover { transform: translateY(-6px); border-color: rgba(255,107,0,.3); box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+    .mat-icon { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, rgba(255,107,0,.2), rgba(255,107,0,.05)); border: 1px solid rgba(255,107,0,.2); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--orange); margin-bottom: 22px; }
+    .mat-title { font-family: 'Exo 2', sans-serif; font-weight: 700; font-size: 1.15rem; color: var(--text-main); margin-bottom: 14px; }
+    .mat-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .mat-list li { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; color: var(--text-muted); line-height: 1.6; }
+    .mat-list li i { color: var(--orange); margin-top: 3px; flex-shrink: 0; font-size: .7rem; }
+    .free-banner { background: linear-gradient(135deg, rgba(34,197,94,.12), rgba(22,163,74,.06)); border: 1px solid rgba(34,197,94,.3); border-radius: var(--radius-lg); padding: 30px 36px; text-align: center; margin-bottom: 44px; }
+    .free-banner h3 { font-family: 'Exo 2', sans-serif; font-weight: 900; font-size: 1.6rem; color: #4ade80; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .free-banner p { color: var(--text-muted); font-size: .98rem; line-height: 1.7; }
+
+    /* ── LABORATÓRIO ── */
+    #laboratorio { background: var(--navy-mid); }
+    .lab-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .lab-visual { position: relative; display: flex; justify-content: center; align-items: center; }
+    .lab-visual-inner { width: 340px; height: 340px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,107,0,.08), rgba(30,144,255,.05)); border: 1px solid rgba(255,107,0,.15); display: flex; align-items: center; justify-content: center; position: relative; animation: rotateRing 30s linear infinite; }
+    @keyframes rotateRing { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .lab-visual-core { width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(255,107,0,.15), rgba(255,107,0,.03)); border: 1px solid rgba(255,107,0,.2); display: flex; align-items: center; justify-content: center; font-size: 4.5rem; color: var(--orange); animation: counterRotate 30s linear infinite, glowPulse 4s ease-in-out infinite; }
+    @keyframes counterRotate { from{transform:rotate(0deg)} to{transform:rotate(-360deg)} }
+    @keyframes glowPulse { 0%,100%{box-shadow:0 0 30px rgba(255,107,0,.15)} 50%{box-shadow:0 0 70px rgba(255,107,0,.3)} }
+    .lab-orbit-dot { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 10px var(--orange); }
+    .lab-orbit-dot:nth-child(2) { top: 10px; left: 50%; margin-left: -6px; }
+    .lab-orbit-dot:nth-child(3) { bottom: 10px; left: 50%; margin-left: -6px; }
+    .lab-orbit-dot:nth-child(4) { left: 10px; top: 50%; margin-top: -6px; background: var(--blue-accent); box-shadow: 0 0 10px var(--blue-accent); }
+    .lab-mission { display: flex; flex-direction: column; gap: 32px; }
+    .mission-item { display: flex; gap: 20px; align-items: flex-start; }
+    .mission-icon { width: 52px; height: 52px; flex-shrink: 0; border-radius: 12px; background: linear-gradient(135deg, rgba(255,107,0,.2), rgba(255,107,0,.05)); border: 1px solid rgba(255,107,0,.2); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--orange); }
+    .mission-text h4 { font-family: 'Exo 2', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--text-main); margin-bottom: 6px; }
+    .mission-text p { font-size: .9rem; color: var(--text-muted); line-height: 1.7; }
+    .lab-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 10px; }
+    .lab-stat-box { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 20px; text-align: center; backdrop-filter: blur(10px); }
+    .lab-stat-box strong { display: block; font-family: 'Exo 2', sans-serif; font-weight: 900; font-size: 2rem; color: var(--orange); }
+    .lab-stat-box span { font-size: .8rem; color: var(--text-muted); }
+
+    /* ── FOOTER ── */
+    footer { background: #030a18; border-top: 1px solid var(--glass-border); padding: 50px 5% 30px; text-align: center; }
+    .footer-pref-logo { margin: 0 auto 20px; display: block; height: 110px; width: auto; object-fit: contain; opacity: .92; }
+    .footer-divider { border: none; height: 1px; background: linear-gradient(90deg, transparent, var(--glass-border), transparent); margin: 24px 0; }
+    .footer-copy { font-size: .8rem; color: rgba(127,152,194,.5); }
+
+    /* ── BACK TO TOP ── */
+    #backTop { position: fixed; bottom: 28px; right: 28px; z-index: 999; width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, var(--orange), #e55a00); border: none; cursor: pointer; color: #fff; font-size: 1rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 24px rgba(255,107,0,.45); opacity: 0; transform: translateY(20px); transition: var(--transition); pointer-events: none; }
+    #backTop.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    #backTop:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(255,107,0,.6); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) { .lab-layout { grid-template-columns: 1fr; gap: 50px; } .lab-visual { display: none; } }
+    @media (max-width: 768px) { .nav-links { display: none; } .hamburger { display: flex; } section { padding: 80px 6%; } .hero-stats { gap: 28px; } .lab-stats-row { grid-template-columns: 1fr 1fr; } }
+    #hero { padding-top: 72px; }
+    @media (max-width: 480px) { .hero-cta { flex-direction: column; } .btn-primary, .btn-secondary { justify-content: center; } .lab-stats-row { grid-template-columns: 1fr; } .team-card { width: 100%; max-width: 320px; } }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ────────────────────────────────────────── -->
+<nav id="navbar">
+  <a href="#hero" class="nav-logo">
+    <img id="nav-logo-img" src="./images/logo-lab.png" alt="Laboratório de Informática" />
+  </a>
+  <ul class="nav-links">
+    <li><a href="#cursos">Cursos</a></li>
+    <li><a href="#arquivos">Arquivos</a></li>
+    <li><a href="#equipe">Equipe</a></li>
+    <li><a href="#matricula">Matrícula</a></li>
+    <li><a href="#laboratorio">Laboratório</a></li>
+  </ul>
+  <button class="hamburger" id="menuBtn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#cursos"      onclick="closeMobile()">Tipos de Cursos</a>
+  <a href="#arquivos"    onclick="closeMobile()">Arquivos de Aula</a>
+  <a href="#equipe"      onclick="closeMobile()">Sobre a Equipe</a>
+  <a href="#matricula"   onclick="closeMobile()">Como me Matricular</a>
+  <a href="#laboratorio" onclick="closeMobile()">Sobre o Laboratório</a>
+</div>
+
+<!-- ── HERO ───────────────────────────────────────── -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-grid-overlay"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-layout">
+
+    <!-- ── Conteúdo esquerdo ── -->
+    <div class="hero-content">
+      <div class="hero-top-badges">
+        <div class="hero-badge">
+          <span class="dot"></span>
+          Tupanatinga – Pernambuco
+        </div>
+        <div class="hero-free-pill">
+          <i class="fas fa-gift"></i> 100% Gratuito
+        </div>
+      </div>
+      <h1 class="hero-title">
+        <span class="line1">Aprenda Tecnologia.</span>
+        <span class="line2">Transforme</span>
+        <span class="line1">Seu Futuro.</span>
+      </h1>
+      <p class="hero-desc">
+        O Laboratório de Informática de Tupanatinga oferece cursos de qualidade para todas as idades, nos turnos da manhã, tarde e noite — com estrutura moderna e formação progressiva do básico ao avançado.
+      </p>
+      <div class="hero-cta">
+        <a href="#matricula" class="btn-primary"><i class="fas fa-user-plus"></i> Quero me Matricular</a>
+        <a href="#cursos" class="btn-secondary"><i class="fas fa-graduation-cap"></i> Ver os Cursos</a>
+      </div>
+      <!-- <div class="hero-stats">
+        <div class="hero-stat"><span>3</span><span>Turnos Disponíveis</span></div>
+        <div class="hero-stat"><span>10</span><span>Meses de Curso</span></div>
+        <div class="hero-stat"><span>R$0</span><span>Totalmente Gratuito</span></div>
+      </div> -->
+    </div>
+
+    <!-- ── Painel criativo direito ── -->
+    <div class="hero-right">
+      <div class="tech-panel">
+        <div class="tech-panel-header">
+          <div class="tp-dots"><span></span><span></span><span></span></div>
+          <span class="tp-label">Lab · Informática</span>
+        </div>
+        <div class="tp-row">
+          <div class="tp-icon orange"><i class="fas fa-users"></i></div>
+          <div class="tp-info">
+            <strong>12 Profissionais</strong>
+            <span>Em 3 turnos ativos</span>
+          </div>
+        </div>
+        <div class="tp-row">
+          <div class="tp-icon blue"><i class="fas fa-desktop"></i></div>
+          <div class="tp-info">
+            <strong>11 Computadores</strong>
+            <span>Equipamentos modernos</span>
+          </div>
+        </div>
+        <div class="tp-row">
+          <div class="tp-icon orange"><i class="fas fa-layer-group"></i></div>
+          <div class="tp-info">
+            <strong>3 Níveis de Curso</strong>
+            <span>Básico · Avançado I · Avançado II</span>
+          </div>
+        </div>
+        <div class="tp-row">
+          <div class="tp-icon green"><i class="fas fa-calendar-check"></i></div>
+          <div class="tp-info">
+            <strong>10 Meses</strong>
+            <span>Por módulo · Aulas de 2h</span>
+          </div>
+        </div>
+        <div class="tp-tags">
+          <span class="tp-tag"><i class="fas fa-circle-dot"></i> Manhã</span>
+          <span class="tp-tag"><i class="fas fa-circle-dot"></i> Tarde</span>
+          <span class="tp-tag"><i class="fas fa-circle-dot"></i> Noite</span>
+          <span class="tp-tag"><i class="fas fa-circle-dot"></i> Todas as idades</span>
+        </div>
+      </div>
+
+      <div class="mini-panel">
+        <div class="mini-panel-icon"><i class="fas fa-gift"></i></div>
+        <div>
+          <strong>100% Gratuito</strong>
+          <span>Sem taxa de matrícula ou mensalidade</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /hero-layout -->
+</section>
+
+<!-- ── TIPOS DE CURSOS ─────────────────────────────── -->
+<section id="cursos">
+  <div class="section-header reveal">
+    <div class="section-tag"><i class="fas fa-layer-group"></i> Formação Progressiva</div>
+    <h2 class="section-title">Tipos de <span>Cursos</span></h2>
+    <p class="section-subtitle">Os cursos são realizados em sequência ao longo de três anos — um módulo por ano — e abertos a todas as faixas etárias. Ao concluir o Básico, o aluno avança para o Avançado I no ano seguinte e assim por diante.</p>
+  </div>
+  <div class="cursos-grid">
+
+    <!-- BÁSICO -->
+    <div class="curso-card reveal reveal-delay-1" data-curso="basico" onclick="selectCurso(this)">
+      <div class="curso-icon"><i class="fas fa-seedling"></i></div>
+      <p class="curso-label">1º Ano – Nível 01</p>
+      <h3 class="curso-title">Básico</h3>
+      <div class="curso-duration"><i class="fas fa-clock"></i> 10 meses · Aulas de 2h</div>
+      <p class="curso-desc">Ponto de partida para quem deseja entrar no mundo digital. Ideal para qualquer pessoa, desde crianças até adultos, sem exigência de conhecimento prévio.</p>
+      <ul class="curso-topics">
+        <li><i class="fas fa-circle-dot"></i> Arquitetura do Computador — surgimento, evolução e funcionamento</li>
+        <li><i class="fas fa-circle-dot"></i> Hardware e Software — principais peças e sua importância</li>
+        <li><i class="fas fa-circle-dot"></i> História e Evolução da Internet</li>
+        <li><i class="fas fa-circle-dot"></i> Pacote Office — Word, Excel e PowerPoint</li>
+        <li><i class="fas fa-circle-dot"></i> Ferramentas do Google e seus recursos</li>
+      </ul>
+      <span class="curso-pill"><i class="fas fa-arrow-right"></i> Pré-requisito: nenhum</span>
+    </div>
+
+    <!-- AVANÇADO I -->
+    <div class="curso-card reveal reveal-delay-2" data-curso="avancado1" onclick="selectCurso(this)">
+      <div class="curso-icon"><i class="fas fa-rocket"></i></div>
+      <p class="curso-label">2º Ano – Nível 02</p>
+      <h3 class="curso-title">Avançado I</h3>
+      <div class="curso-duration"><i class="fas fa-clock"></i> 10 meses · Aulas de 2h</div>
+      <p class="curso-desc">Para quem já concluiu o Básico e está pronto para aprofundar seus conhecimentos com ferramentas profissionais e maior produtividade no ambiente digital.</p>
+      <ul class="curso-topics">
+        <li><i class="fas fa-circle-dot"></i> Revisão sobre a Arquitetura do Computador</li>
+        <li><i class="fas fa-circle-dot"></i> Desenvolvimento mais profundo sobre Hardware</li>
+        <li><i class="fas fa-circle-dot"></i> Introdução ao Design Gráfico com o Canva</li>
+        <li><i class="fas fa-circle-dot"></i> Sistemas Operacionais — tipos e abordagem aprofundada</li>
+      </ul>
+      <span class="curso-pill"><i class="fas fa-check-circle"></i> Pré-requisito: Básico</span>
+    </div>
+
+    <!-- AVANÇADO II -->
+    <div class="curso-card reveal reveal-delay-3" data-curso="avancado2" onclick="selectCurso(this)">
+      <div class="curso-icon"><i class="fas fa-code"></i></div>
+      <p class="curso-label">3º Ano – Nível 03</p>
+      <h3 class="curso-title">Avançado II</h3>
+      <div class="curso-duration"><i class="fas fa-clock"></i> 10 meses · Aulas de 2h</div>
+      <p class="curso-desc">O nível mais completo da nossa formação. Para alunos que já cursaram o Avançado I e buscam dominar ferramentas avançadas, inteligência artificial e segurança digital.</p>
+      <ul class="curso-topics">
+        <li><i class="fas fa-circle-dot"></i> Ferramentas Avançadas do Canva e suas aplicações</li>
+        <li><i class="fas fa-circle-dot"></i> Inteligência Artificial (IA) — prática com ferramentas gratuitas</li>
+        <li><i class="fas fa-circle-dot"></i> Internet e seus serviços — funcionamento e siglas</li>
+        <li><i class="fas fa-circle-dot"></i> Segurança Cibernética — boas práticas na internet</li>
+        <li><i class="fas fa-circle-dot"></i> Excel — Fórmulas avançadas e análise de dados</li>
+      </ul>
+      <span class="curso-pill"><i class="fas fa-check-circle"></i> Pré-requisito: Avançado I</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── ARQUIVOS DE AULA ─────────────────────────────── -->
+<section id="arquivos">
+  <div class="section-header reveal">
+    <div class="section-tag"><i class="fas fa-folder-open"></i> Materiais</div>
+    <h2 class="section-title">Arquivos de <span>Aula</span></h2>
+    <p class="section-subtitle">Acesse os materiais e conteúdos de cada turma, organizados por turno. Selecione o período para visualizar os arquivos disponíveis.</p>
+  </div>
+  <div class="period-tabs reveal">
+    <button class="period-tab active" onclick="switchTab('arquivos','manha',this)"><i class="fas fa-sun"></i> Manhã</button>
+    <button class="period-tab" onclick="switchTab('arquivos','tarde',this)"><i class="fas fa-cloud-sun"></i> Tarde</button>
+    <button class="period-tab" onclick="switchTab('arquivos','noite',this)"><i class="fas fa-moon"></i> Noite</button>
+  </div>
+
+  <div class="tab-panel active" id="arquivos-manha">
+    <div class="files-grid">
+      <div class="file-card"><div class="file-icon pdf"><i class="fas fa-file-pdf"></i></div><div class="file-info"><p class="file-name">Aula 01 – Introdução à Informática</p><p class="file-meta">PDF · 2.4 MB · Módulo Básico</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon doc"><i class="fas fa-file-word"></i></div><div class="file-info"><p class="file-name">Aula 02 – Sistema Operacional</p><p class="file-meta">DOCX · 1.1 MB · Módulo Básico</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon ppt"><i class="fas fa-file-powerpoint"></i></div><div class="file-info"><p class="file-name">Aula 03 – Navegação na Internet</p><p class="file-meta">PPTX · 5.7 MB · Módulo Básico</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon pdf"><i class="fas fa-file-pdf"></i></div><div class="file-info"><p class="file-name">Exercícios – Microsoft Word</p><p class="file-meta">PDF · 890 KB · Módulo Básico</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon zip"><i class="fas fa-file-archive"></i></div><div class="file-info"><p class="file-name">Pacote de Exercícios Excel</p><p class="file-meta">ZIP · 3.2 MB · Módulo Básico</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon doc"><i class="fas fa-file-word"></i></div><div class="file-info"><p class="file-name">Aula 04 – E-mail Profissional</p><p class="file-meta">DOCX · 730 KB · Módulo Básico</p></div><i class="fas fa-download file-dl"></i></div>
+    </div>
+  </div>
+  <div class="tab-panel" id="arquivos-tarde">
+    <div class="files-grid">
+      <div class="file-card"><div class="file-icon pdf"><i class="fas fa-file-pdf"></i></div><div class="file-info"><p class="file-name">Aula 01 – Excel Avançado</p><p class="file-meta">PDF · 3.1 MB · Módulo Avançado I</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon ppt"><i class="fas fa-file-powerpoint"></i></div><div class="file-info"><p class="file-name">Aula 02 – Design com PowerPoint</p><p class="file-meta">PPTX · 6.8 MB · Módulo Avançado I</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon pdf"><i class="fas fa-file-pdf"></i></div><div class="file-info"><p class="file-name">Aula 03 – Segurança Digital</p><p class="file-meta">PDF · 1.9 MB · Módulo Avançado I</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon zip"><i class="fas fa-file-archive"></i></div><div class="file-info"><p class="file-name">Materiais Complementares</p><p class="file-meta">ZIP · 7.4 MB · Módulo Avançado I</p></div><i class="fas fa-download file-dl"></i></div>
+    </div>
+  </div>
+  <div class="tab-panel" id="arquivos-noite">
+    <div class="files-grid">
+      <div class="file-card"><div class="file-icon pdf"><i class="fas fa-file-pdf"></i></div><div class="file-info"><p class="file-name">Aula 01 – Lógica de Programação</p><p class="file-meta">PDF · 4.2 MB · Módulo Avançado II</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon doc"><i class="fas fa-file-word"></i></div><div class="file-info"><p class="file-name">Aula 02 – HTML e CSS Básico</p><p class="file-meta">DOCX · 2.6 MB · Módulo Avançado II</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon pdf"><i class="fas fa-file-pdf"></i></div><div class="file-info"><p class="file-name">Aula 03 – Banco de Dados SQL</p><p class="file-meta">PDF · 3.8 MB · Módulo Avançado II</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon ppt"><i class="fas fa-file-powerpoint"></i></div><div class="file-info"><p class="file-name">Slides – Introdução ao Python</p><p class="file-meta">PPTX · 5.5 MB · Módulo Avançado II</p></div><i class="fas fa-download file-dl"></i></div>
+      <div class="file-card"><div class="file-icon zip"><i class="fas fa-file-archive"></i></div><div class="file-info"><p class="file-name">Projeto Final – Desenvolvimento Web</p><p class="file-meta">ZIP · 9.1 MB · Módulo Avançado II</p></div><i class="fas fa-download file-dl"></i></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SOBRE A EQUIPE ──────────────────────────────── -->
+<section id="equipe">
+  <div class="section-header reveal">
+    <div class="section-tag"><i class="fas fa-users"></i> Nossa Equipe</div>
+    <h2 class="section-title">Sobre a <span>Equipe</span></h2>
+    <p class="section-subtitle">Conheça os profissionais dedicados que fazem o laboratório funcionar em cada turno, com comprometimento e excelência no ensino.</p>
+  </div>
+  <div class="period-tabs reveal">
+    <button class="period-tab active" onclick="switchTab('equipe','manha',this)"><i class="fas fa-sun"></i> Manhã</button>
+    <button class="period-tab" onclick="switchTab('equipe','tarde',this)"><i class="fas fa-cloud-sun"></i> Tarde</button>
+    <button class="period-tab" onclick="switchTab('equipe','noite',this)"><i class="fas fa-moon"></i> Noite</button>
+    <button class="period-tab" onclick="switchTab('equipe','coord',this)"><i class="fas fa-star"></i> Coordenadora</button>
+  </div>
+
+  <!-- Manhã — 6 pessoas -->
+  <div class="tab-panel active" id="equipe-manha">
+    <div class="team-grid">
+      <div class="team-card reveal reveal-delay-1">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/regina.jpg" alt="Regina" onerror="this.style.display='none'" />
+          <i class="fas fa-broom"></i>
+        </div>
+        <h4 class="team-name">Regina</h4>
+        <p class="team-role">Zeladora</p>
+        <span class="team-period-badge"><i class="fas fa-sun"></i>&nbsp; Turno Manhã</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+      <div class="team-card reveal reveal-delay-2">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/reberson.jpg" alt="Reberson" onerror="this.style.display='none'" />
+          <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <h4 class="team-name">Reberson</h4>
+        <p class="team-role">Professor</p>
+        <p class="team-role-sub">Formado em ADS</p>
+        <span class="team-period-badge"><i class="fas fa-sun"></i>&nbsp; Turno Manhã</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+      <div class="team-card reveal reveal-delay-3">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/tailany.jpg" alt="Tailany" onerror="this.style.display='none'" />
+          <i class="fas fa-user-graduate"></i>
+        </div>
+        <h4 class="team-name">Tailany</h4>
+        <p class="team-role">Monitor</p>
+        <span class="team-period-badge"><i class="fas fa-sun"></i>&nbsp; Turno Manhã</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+      <div class="team-card reveal reveal-delay-4">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/maria-luiza.jpg" alt="Maria Luíza" onerror="this.style.display='none'" />
+          <i class="fas fa-user-graduate"></i>
+        </div>
+        <h4 class="team-name">Maria Luíza</h4>
+        <p class="team-role">Monitora</p>
+        <span class="team-period-badge"><i class="fas fa-sun"></i>&nbsp; Turno Manhã</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+      <div class="team-card reveal reveal-delay-5">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/jamilly.jpg" alt="Jamilly" onerror="this.style.display='none'" />
+          <i class="fas fa-user-graduate"></i>
+        </div>
+        <h4 class="team-name">Jamilly</h4>
+        <p class="team-role">Monitora</p>
+        <span class="team-period-badge"><i class="fas fa-sun"></i>&nbsp; Turno Manhã</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+      <div class="team-card reveal">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/emilia.jpg" alt="Emília" onerror="this.style.display='none'" />
+          <i class="fas fa-user-tie"></i>
+        </div>
+        <h4 class="team-name">Emília</h4>
+        <p class="team-role">Administradora</p>
+        <span class="team-period-badge"><i class="fas fa-sun"></i>&nbsp; Turno Manhã</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tarde — 3 pessoas -->
+  <div class="tab-panel" id="equipe-tarde">
+    <div class="team-grid">
+      <div class="team-card reveal reveal-delay-1">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/guilherme.jpg" alt="Guilherme" onerror="this.style.display='none'" />
+          <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <h4 class="team-name">Guilherme</h4>
+        <p class="team-role">Professor</p>
+        <span class="team-period-badge"><i class="fas fa-cloud-sun"></i>&nbsp; Turno Tarde</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+      <div class="team-card reveal reveal-delay-2">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/victor.jpg" alt="Victor" onerror="this.style.display='none'" />
+          <i class="fas fa-user-graduate"></i>
+        </div>
+        <h4 class="team-name">Victor</h4>
+        <p class="team-role">Monitor</p>
+        <span class="team-period-badge"><i class="fas fa-cloud-sun"></i>&nbsp; Turno Tarde</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+      <div class="team-card reveal reveal-delay-3">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/brenno.jpg" alt="Brenno" onerror="this.style.display='none'" />
+          <i class="fas fa-user-graduate"></i>
+        </div>
+        <h4 class="team-name">Brenno</h4>
+        <p class="team-role">Monitor</p>
+        <span class="team-period-badge"><i class="fas fa-cloud-sun"></i>&nbsp; Turno Tarde</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Noite — 3 pessoas -->
+  <div class="tab-panel" id="equipe-noite">
+    <div class="team-grid">
+      <div class="team-card reveal reveal-delay-1">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/estevao.jpg" alt="Estevão" onerror="this.style.display='none'" />
+          <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <h4 class="team-name">Estevão</h4>
+        <p class="team-role">Professor</p>
+        <span class="team-period-badge"><i class="fas fa-moon"></i>&nbsp; Turno Noite</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+      <div class="team-card reveal reveal-delay-2">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/kelvis.jpg" alt="Kelvis" onerror="this.style.display='none'" />
+          <i class="fas fa-user-graduate"></i>
+        </div>
+        <h4 class="team-name">Kelvis</h4>
+        <p class="team-role">Monitor</p>
+        <span class="team-period-badge"><i class="fas fa-moon"></i>&nbsp; Turno Noite</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+      <div class="team-card reveal reveal-delay-3">
+        <div class="team-avatar">
+          <img class="team-photo" src="./images/equipe/stefany.jpg" alt="Stefany" onerror="this.style.display='none'" />
+          <i class="fas fa-user-graduate"></i>
+        </div>
+        <h4 class="team-name">Stefany</h4>
+        <p class="team-role">Monitora</p>
+        <span class="team-period-badge"><i class="fas fa-moon"></i>&nbsp; Turno Noite</span>
+        <div class="team-social"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coordenadora -->
+  <div class="tab-panel" id="equipe-coord">
+    <div class="team-grid">
+      <div class="team-card coord">
+        <div class="team-avatar" style="border-color:var(--orange);box-shadow:0 0 26px rgba(255,107,0,.35)">
+          <img class="team-photo" src="./images/equipe/michelly.jpg" alt="Michelly" onerror="this.style.display='none'" />
+          <i class="fas fa-crown" style="font-size:2.2rem"></i>
+        </div>
+        <h4 class="team-name">Michelly</h4>
+        <p class="team-role">Coordenadora</p>
+        <p class="team-role-sub">Coordenação Geral</p>
+        <span class="coord-badge"><i class="fas fa-star"></i> Coordenação</span>
+        <div class="team-social" style="margin-top:16px"><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── COMO ME MATRICULAR ───────────────────────────── -->
+<section id="matricula">
+  <div class="section-header reveal">
+    <div class="section-tag"><i class="fas fa-clipboard-list"></i> Inscrições Abertas</div>
+    <h2 class="section-title">Como me <span>Matricular</span></h2>
+    <p class="section-subtitle">O processo é simples, rápido e presencial. Confira o que você precisa trazer e venha garantir sua vaga — as turmas têm vagas limitadas!</p>
+  </div>
+
+  <div class="free-banner reveal">
+    <h3><i class="fas fa-gift"></i> O curso é 100% GRATUITO!</h3>
+    <p>Nenhum valor é cobrado em nenhuma etapa — nem matrícula, nem mensalidade, nem material. O Laboratório de Informática de Tupanatinga acredita que o acesso à tecnologia é um direito de todos.</p>
+  </div>
+
+  <div class="matricula-grid">
+    <div class="matricula-card reveal reveal-delay-1">
+      <div class="mat-icon"><i class="fas fa-child"></i></div>
+      <h3 class="mat-title">Menores de 18 anos</h3>
+      <ul class="mat-list">
+        <li><i class="fas fa-circle-dot"></i> O responsável legal deve comparecer presencialmente ao laboratório</li>
+        <li><i class="fas fa-circle-dot"></i> Documento de identificação do aluno (RG, certidão de nascimento ou CPF)</li>
+        <li><i class="fas fa-circle-dot"></i> Documento de identificação do responsável (RG ou CNH)</li>
+      </ul>
+    </div>
+
+    <div class="matricula-card reveal reveal-delay-2">
+      <div class="mat-icon"><i class="fas fa-user"></i></div>
+      <h3 class="mat-title">Maiores de 18 anos</h3>
+      <ul class="mat-list">
+        <li><i class="fas fa-circle-dot"></i> Compareça pessoalmente ao laboratório</li>
+        <li><i class="fas fa-circle-dot"></i> Basta apresentar seu RG (Registro Geral)</li>
+        <li><i class="fas fa-circle-dot"></i> Escolha o turno disponível (Manhã, Tarde ou Noite)</li>
+      </ul>
+    </div>
+
+    <div class="matricula-card reveal reveal-delay-3">
+      <div class="mat-icon"><i class="fas fa-clock"></i></div>
+      <h3 class="mat-title">Informações das Aulas</h3>
+      <ul class="mat-list">
+        <li><i class="fas fa-circle-dot"></i> Duração de cada aula: <strong style="color:var(--orange-lt)">2 horas</strong></li>
+        <li><i class="fas fa-circle-dot"></i> Duração total do curso: <strong style="color:var(--orange-lt)">10 meses</strong></li>
+        <li><i class="fas fa-circle-dot"></i> Turmas: Manhã, Tarde e Noite</li>
+        <li><i class="fas fa-circle-dot"></i> Aberto para todas as idades</li>
+        <li><i class="fas fa-circle-dot"></i> Progressão anual: Básico → Avançado I → Avançado II</li>
+      </ul>
+    </div>
+
+    <div class="matricula-card reveal reveal-delay-4">
+      <div class="mat-icon"><i class="fas fa-map-marker-alt"></i></div>
+      <h3 class="mat-title">Onde se Matricular</h3>
+      <ul class="mat-list">
+        <li><i class="fas fa-circle-dot"></i> Compareça diretamente ao Laboratório de Informática</li>
+        <li><i class="fas fa-map-marker-alt" style="color:var(--orange);margin-top:3px;flex-shrink:0;font-size:.7rem"></i> <strong style="color:var(--orange-lt)">Rua Tereza Simões, Nº 47 — Centro, Tupanatinga/PE</strong></li>
+        <li><i class="fas fa-circle-dot"></i> Atendimento presencial durante o horário de funcionamento</li>
+        <li><i class="fas fa-circle-dot"></i> Dúvidas? Entre em contato pelas redes sociais</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── SOBRE O LABORATÓRIO ─────────────────────────── -->
+<section id="laboratorio">
+  <div class="section-header reveal">
+    <div class="section-tag"><i class="fas fa-flask"></i> Instituição</div>
+    <h2 class="section-title">Sobre o <span>Laboratório</span></h2>
+    <p class="section-subtitle">Conheça nossa estrutura, missão e os valores que guiam cada atividade realizada em nosso espaço de transformação digital.</p>
+  </div>
+  <div class="lab-layout">
+    <div class="lab-visual reveal reveal-delay-1">
+      <div class="lab-visual-inner">
+        <span class="lab-orbit-dot"></span>
+        <span class="lab-orbit-dot"></span>
+        <span class="lab-orbit-dot"></span>
+        <div class="lab-visual-core"><i class="fas fa-microchip"></i></div>
+      </div>
+    </div>
+    <div class="lab-mission reveal reveal-delay-2">
+      <div class="mission-item">
+        <div class="mission-icon"><i class="fas fa-bullseye"></i></div>
+        <div class="mission-text">
+          <h4>Nossa Missão</h4>
+          <p>Democratizar o acesso à tecnologia por meio de educação digital gratuita e de qualidade, formando cidadãos preparados para os desafios do século XXI, independentemente da idade.</p>
+        </div>
+      </div>
+      <div class="mission-item">
+        <div class="mission-icon"><i class="fas fa-eye"></i></div>
+        <div class="mission-text">
+          <h4>Nossa Visão</h4>
+          <p>Ser referência regional em capacitação tecnológica, contribuindo para o desenvolvimento social e econômico de Tupanatinga por meio de uma formação prática, inovadora e inclusiva.</p>
+        </div>
+      </div>
+      <div class="mission-item">
+        <div class="mission-icon"><i class="fas fa-heart"></i></div>
+        <div class="mission-text">
+          <h4>Nossos Valores</h4>
+          <p>Inclusão digital, gratuidade, excelência pedagógica, inovação contínua, responsabilidade social e comprometimento com o desenvolvimento humano de cada aluno.</p>
+        </div>
+      </div>
+      <div class="mission-item">
+        <div class="mission-icon"><i class="fas fa-desktop"></i></div>
+        <div class="mission-text">
+          <h4>Estrutura Física</h4>
+          <p>11 computadores modernos, conexão de internet, ambiente preparado, projetor multimídia e software atualizado garantem uma experiência de aprendizado completa e de alto nível.</p>
+        </div>
+      </div>
+      <div class="lab-stats-row">
+        <div class="lab-stat-box"><strong>11</strong><span>Computadores</span></div>
+        <div class="lab-stat-box"><strong>3</strong><span>Turnos Ativos</span></div>
+        <div class="lab-stat-box"><strong>R$0</strong><span>Custo para o Aluno</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────── -->
+<footer>
+  <img id="footer-logo-img" src="./images/logo-prefeitura.png" alt="Prefeitura de Tupanatinga" class="footer-pref-logo" />
+  <hr class="footer-divider" />
+  <p class="footer-copy">&copy; 2025 Laboratório de Informática – Tupanatinga / PE. Todos os direitos reservados.</p>
+</footer>
+
+<button id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Voltar ao topo">
+  <i class="fas fa-chevron-up"></i>
+</button>
+
+<script>
+
+  /* ── NAV SCROLL ── */
+  const navbar  = document.getElementById('navbar');
+  const backTop = document.getElementById('backTop');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 30);
+    backTop.classList.toggle('show', window.scrollY > 300);
+  });
+
+  /* ── MOBILE ── */
+  document.getElementById('menuBtn').addEventListener('click', () => {
+    document.getElementById('mobileMenu').classList.toggle('open');
+  });
+  function closeMobile() { document.getElementById('mobileMenu').classList.remove('open'); }
+
+  /* ── TABS ── */
+  function switchTab(group, period, btn) {
+    document.querySelectorAll('[id^="' + group + '-"]').forEach(p => p.classList.remove('active'));
+    btn.parentElement.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(group + '-' + period).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  /* ── CURSO SELECT ── */
+  function selectCurso(card) {
+    document.querySelectorAll('.curso-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+  }
+
+  /* ── REVEAL ── */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  /* ── CANVAS PARTICLES ── */
+  /* Canvas otimizado: 45 partículas, 30fps, sem sqrt no loop de conexões, sem interação de mouse, desativado em mobile */
+  (function () {
+    const cv = document.getElementById('hero-canvas');
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.innerWidth < 768) {
+      cv.style.display = 'none'; return;
+    }
+    const ctx = cv.getContext('2d');
+    let W, H;
+    function resize() { W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const COUNT    = 45;
+    const CONN_SQ  = 90 * 90;
+    const FPS_MS   = 1000 / 30;
+    let   lastT    = 0;
+
+    const pts = Array.from({ length: COUNT }, () => ({
+      x: Math.random() * (window.innerWidth  || 1200),
+      y: Math.random() * (window.innerHeight || 800),
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: -(Math.random() * 0.35 + 0.1),
+      r:  Math.random() * 1.2 + 0.4,
+      life: 0, maxL: 0,
+      hue: Math.random() > 0.7 ? 'o' : 'b'
+    }));
+    pts.forEach(p => { p.life = Math.random() * 180 + 80; p.maxL = p.life; });
+
+    function reset(p) {
+      p.x = Math.random() * W; p.y = H + 5;
+      p.vx = (Math.random() - 0.5) * 0.3;
+      p.vy = -(Math.random() * 0.35 + 0.1);
+      p.life = Math.random() * 180 + 80; p.maxL = p.life;
+    }
+
+    function frame(now) {
+      requestAnimationFrame(frame);
+      if (now - lastT < FPS_MS) return;
+      lastT = now;
+
+      ctx.fillStyle = '#050d1f';
+      ctx.fillRect(0, 0, W, H);
+
+      /* linhas — comparação sem sqrt */
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < COUNT; i++) {
+        for (let j = i + 1; j < COUNT; j++) {
+          const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+          const dSq = dx * dx + dy * dy;
+          if (dSq < CONN_SQ) {
+            ctx.strokeStyle = 'rgba(255,107,0,' + ((1 - dSq / CONN_SQ) * 0.14).toFixed(2) + ')';
+            ctx.beginPath();
+            ctx.moveTo(pts[i].x, pts[i].y);
+            ctx.lineTo(pts[j].x, pts[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      /* partículas */
+      for (let i = 0; i < COUNT; i++) {
+        const p = pts[i];
+        p.x += p.vx; p.y += p.vy; p.life--;
+        if (p.life <= 0 || p.y < -10) reset(p);
+        const a = ((p.life / p.maxL) * 0.65).toFixed(2);
+        ctx.fillStyle = p.hue === 'o' ? 'rgba(255,107,0,' + a + ')' : 'rgba(30,144,255,' + (p.life / p.maxL * 0.35).toFixed(2) + ')';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, 6.2832);
+        ctx.fill();
+      }
+    }
+    requestAnimationFrame(frame);
+  })();
+
+  /* ── NAV ACTIVE ── */
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+    navLinks.forEach(a => { a.style.color = a.getAttribute('href') === '#' + current ? 'var(--orange)' : ''; });
+  });
+</script>
+</body>
+</html>
